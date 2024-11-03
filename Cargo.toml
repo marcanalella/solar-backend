@@ -27,6 +27,7 @@ reqwest = "0.12.9"
 # The feature is not enabled by default to avoid pulling in
 # unnecessary dependencies for projects that do not need it.
 serde = { version = "1.0.214", features = ["derive"] }
+config = "0.11"
 
 # Using table-like toml syntax to avoid a super-long line!
 [dependencies.sqlx]
