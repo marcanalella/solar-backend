@@ -57,4 +57,4 @@ Utc::now()
             // Using the `?` operator to return early
             // if the function failed, returning a sqlx::Error
             // We will talk about error handling in depth later!
-        })?;
+        })?;    Ok(())}
