@@ -14,7 +14,6 @@ struct FormData {
     name = "Adding a new subscriber",
     skip(form, pool),
     fields(
-request_id = %Uuid::new_v4(),
 subscriber_email = %form.email,
 subscriber_name= %form.name
     )
@@ -57,4 +56,6 @@ Utc::now()
             // Using the `?` operator to return early
             // if the function failed, returning a sqlx::Error
             // We will talk about error handling in depth later!
-        })?;    Ok(())}
+        })?;
+    Ok(())
+}
