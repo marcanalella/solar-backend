@@ -7,6 +7,9 @@
 use solar_backend::configuration::{get_configuration, DatabaseSettings};
 use solar_backend::telemetry::{get_subscriber, init_subscriber};
 use sqlx::PgPool;
+//init_subscriber should only be called once, but it is being invoked by all tests.
+// We can use once_cell to rectify it:
+use once_cell::sync::Lazy;
 use std::net::TcpListener;
 
 #[tokio::test]
