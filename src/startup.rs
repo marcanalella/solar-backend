@@ -3,7 +3,7 @@ use crate::routes::{health_check, subscribe};
 use actix_web::dev::Server;
 use actix_web::{web, App, HttpServer};
 use tracing_actix_web::TracingLogger;
-use sqlx::PgPool;
+use sqlx::postgres::PgPool;
 use std::net::TcpListener;
 
 pub fn run(

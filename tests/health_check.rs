@@ -6,11 +6,14 @@
 
 use solar_backend::configuration::{get_configuration, DatabaseSettings};
 use solar_backend::telemetry::{get_subscriber, init_subscriber};
-use sqlx::PgPool;
+use sqlx::{Connection, Executor, PgConnection, PgPool};
 //init_subscriber should only be called once, but it is being invoked by all tests.
 // We can use once_cell to rectify it:
 use once_cell::sync::Lazy;
 use std::net::TcpListener;
+use secrecy::ExposeSecret;
+use uuid::Uuid;
+use solar_backend::startup::run;
 
 #[tokio::test]
 async fn health_check_works() {
@@ -21,7 +24,7 @@ async fn health_check_works() {
 
     // Act
     let response = client
-        .get(&format!("{}/health_check", &app.address))
+        .get(&format!("{}/health_check", &app.await.address))
         .send()
         .await
         .expect("Failed to execute request.");
@@ -40,7 +43,7 @@ async fn subscribe_returns_a_200_for_valid_form_data() {
     // Act
     let body = "name=le%20guin&email=ursula_le_guin%40gmail.com";
     let response = client
-        .post(&format!("{}/subscriptions", &app.address))
+        .post(&format!("{}/subscriptions", &app.await.address))
         .header("Content-Type", "application/x-www-form-urlencoded")
         .body(body)
         .send()
@@ -51,7 +54,7 @@ async fn subscribe_returns_a_200_for_valid_form_data() {
     assert_eq!(200, response.status().as_u16());
 
     let saved = sqlx::query!("SELECT email, name FROM subscriptions",)
-        .fetch_one(&app.db_pool)
+        .fetch_one(&app.await.db_pool)
         .await
         .expect("Failed to fetch saved subscription.");
 
@@ -95,16 +98,8 @@ async fn subscribe_returns_a_400_when_data_is_missing() {
 static TRACING: Lazy<()> = Lazy::new(|| {
     let default_filter_level = "info".to_string();
     let subscriber_name = "test".to_string();
-    // We cannot assign the output of `get_subscriber` to a variable based on the value of `TEST_LOG`
-    // because the sink is part of the type returned by `get_subscriber`, therefore they are not the
-    // same type. We could work around it, but this is the most straight-forward way of moving forward.
-    if std::env::var("TEST_LOG").is_ok() {
-        let subscriber = get_subscriber(subscriber_name, default_filter_level, std::io::stdout);
-        init_subscriber(subscriber);
-    } else {
-        let subscriber = get_subscriber(subscriber_name, default_filter_level, std::io::sink);
-        init_subscriber(subscriber);
-    };
+    let subscriber = get_subscriber(subscriber_name, default_filter_level, std::io::sink);
+    init_subscriber(subscriber);
 });
 
 //When you want to see all logs coming out of a certain test case to debug it you can run
